@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I-Message: Искусство диалога</title>
+    <title>Я-сообщения</title>
     
     <!-- Шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,8 +20,8 @@
 
     <!-- Верхняя панель -->
     <header class="top-bar">
-        <div class="course-title">I-Message: Искусство диалога</div>
-        <div class="author">Автор: Александр Арлекин</div>
+        <div class="course-title">Я-сообщения</div>
+        <div class="author">Сафронов Денис</div>
     </header>
 
     <!-- Контейнер презентации -->
@@ -32,18 +32,33 @@
     <!-- Нижняя панель -->
     <footer class="bottom-bar">
         <div class="progress-container">
-            <div class="progress-label">Прогресс</div>
             <div class="progress-track">
                 <div class="progress-fill" id="progress-bar"></div>
             </div>
         </div>
-        <div class="contacts">Разработчик: contact@example.com</div>
+        <a href="https://telegram.me/SDM_ryazan" class="contacts" target="_blank" rel="noopener noreferrer">Разработчик: Сафронов Денис</a>
     </footer>
+
+    <!-- Кнопка Назад -->
+    <button id="prev-btn" class="prev-button" disabled>
+        <i data-lucide="arrow-up"></i> Назад
+    </button>
 
     <!-- Кнопка Далее -->
     <button id="next-btn" class="next-button" disabled>
-        Ответьте на вопрос <i data-lucide="arrow-down"></i>
+        Далее <i data-lucide="arrow-down"></i>
     </button>
+
+    <!-- Финальный экран -->
+    <div id="final-screen" class="final-screen hidden">
+        <div class="final-content">
+            <h1 class="final-title">Курс завершен!</h1>
+            <p class="final-result" id="final-result"></p>
+            <button id="restart-btn" class="restart-button">
+                Пройти заново <i data-lucide="refresh-cw"></i>
+            </button>
+        </div>
+    </div>
 
     <!-- Скрипт -->
     <script src="script.js"></script>
