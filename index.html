@@ -26,7 +26,7 @@
 
     <!-- Контейнер презентации -->
     <main id="presentation-container">
-        <!-- Слайды будут генерироваться здесь через JS -->
+        <!-- Слайды генерируются через JS -->
     </main>
 
     <!-- Нижняя панель -->
@@ -40,7 +40,7 @@
         <div class="contacts">Разработчик: contact@example.com</div>
     </footer>
 
-    <!-- Кнопка Далее (плавающая) -->
+    <!-- Кнопка Далее -->
     <button id="next-btn" class="next-button">
         Далее <i data-lucide="arrow-down"></i>
     </button>
@@ -48,7 +48,10 @@
     <!-- Скрипт -->
     <script src="script.js"></script>
     <script>
-        lucide.createIcons();
+        // Инициализация иконок после загрузки страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>
