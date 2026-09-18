@@ -3,55 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Искусство обратной связи</title>
+    <title>I-Message: Искусство диалога</title>
     
-    <!-- Подключение шрифтов -->
+    <!-- Шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Иконки Lucide -->
+    <!-- Иконки -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Стили -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <!-- Верхняя панель -->
     <header class="top-bar">
-        <div class="container header-content">
-            <h1 class="course-title">Искусство обратной связи</h1>
-            <div class="author-info">
-                <span class="author-name">Автор курса</span>
-            </div>
-        </div>
+        <div class="course-title">I-Message: Искусство диалога</div>
+        <div class="author">Автор: Александр Арлекин</div>
     </header>
 
     <!-- Контейнер презентации -->
-    <main class="presentation-container" id="presentation">
+    <main id="presentation-container">
         <!-- Слайды будут генерироваться здесь через JS -->
     </main>
 
     <!-- Нижняя панель -->
     <footer class="bottom-bar">
-        <div class="container">
-            <span class="creator-contacts">Разработчик: contact@example.com</span>
+        <div class="progress-container">
+            <div class="progress-label">Прогресс</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
         </div>
+        <div class="contacts">Разработчик: contact@example.com</div>
     </footer>
 
-    <!-- Прогресс бар (боковой) -->
-    <div class="progress-sidebar">
-        <div class="progress-track">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="slide-indicators" id="slideIndicators"></div>
-    </div>
-
-    <!-- Кнопка "Далее" -->
-    <button class="next-btn" id="nextBtn">
-        <span>Далее</span>
-        <i data-lucide="arrow-down"></i>
+    <!-- Кнопка Далее (плавающая) -->
+    <button id="next-btn" class="next-button">
+        Далее <i data-lucide="arrow-down"></i>
     </button>
 
+    <!-- Скрипт -->
     <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
