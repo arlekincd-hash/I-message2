@@ -220,11 +220,14 @@ class Presentation {
         }
         
         this.currentSlideIndex = index;
+        
+        // Обновить состояние кнопки "Далее"
+        this.updateNextButton();
     }
     
     initializeSlideContent(slide) {
         if (slide.data.type === 'image-text') {
-            // Показываем элементы по порядку при скролле внутри слайда
+            // Показываем элементы по порядку при нажатии кнопки "Далее"
             const textContainer = slide.element.querySelector('.text-overlay-container');
             if (textContainer) {
                 const items = textContainer.querySelectorAll('.slide-title, .info-card, .highlight-block');
@@ -241,10 +244,8 @@ class Presentation {
                     }
                 });
                 
-                // Обработчик скролла для показа следующих элементов
-                textContainer.addEventListener('scroll', () => {
-                    this.handleTextScroll(textContainer, items, slide);
-                });
+                // Удаляем обработчик скролла - теперь плашки появляются по кнопке
+                // Обработчик больше не нужен
             }
         } else if (slide.data.type === 'quiz') {
             this.initializeQuiz(slide);
@@ -252,68 +253,54 @@ class Presentation {
     }
     
     handleTextScroll(container, items, slide) {
-        const scrollTop = container.scrollTop;
-        const scrollHeight = container.scrollHeight;
-        const clientHeight = container.clientHeight;
-        
-        // Вычисляем процент прокрутки
-        const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
-        
-        // Показываем элементы в зависимости от прокрутки
-        const visibleItemsCount = Math.floor(scrollPercentage * items.length) + 1;
-        
-        items.forEach((item, index) => {
-            if (index < visibleItemsCount) {
-                item.classList.add('visible');
-            }
-        });
-        
-        // Если все элементы показаны, помечаем слайд как завершенный
-        if (visibleItemsCount >= items.length) {
-            slide.isComplete = true;
-        }
+        // Этот метод больше не используется - плашки появляются по кнопке "Далее"
     }
     
     initializeQuiz(slide) {
         const quizOptions = slide.element.querySelectorAll('.quiz-option');
         const slideIndex = this.currentSlideIndex;
         const quizData = slide.data;
+        let hasAnswered = false;
+        
+        // Сохраняем состояние в объекте слайда
+        slide.hasAnswered = false;
+        slide.selectedCorrectly = false;
         
         quizOptions.forEach(option => {
             option.addEventListener('click', () => {
+                if (slide.hasAnswered) return; // Блокируем повторные клики если уже ответили правильно
+                
                 const optionIndex = parseInt(option.dataset.optionIndex);
                 const selectedOption = quizData.options[optionIndex];
                 const feedbackElement = document.getElementById(`feedback-${slideIndex}`);
                 
-                // Блокируем повторные клики
-                if (option.classList.contains('disabled')) return;
-                
-                // Сбрасываем предыдущие состояния
-                quizOptions.forEach(opt => {
-                    opt.classList.remove('selected-correct', 'selected-wrong', 'disabled');
-                });
-                
                 if (selectedOption.isCorrect) {
                     // Правильный ответ
+                    quizOptions.forEach(opt => {
+                        opt.classList.remove('selected-correct', 'selected-wrong', 'disabled');
+                    });
                     option.classList.add('selected-correct');
                     feedbackElement.textContent = selectedOption.feedbackSuccess || 'Вы ответили верно.';
                     feedbackElement.className = 'quiz-feedback visible success';
                     this.quizScore++;
+                    slide.hasAnswered = true;
+                    slide.selectedCorrectly = true;
                     slide.isComplete = true;
                     
                     // Блокируем все опции
                     quizOptions.forEach(opt => opt.classList.add('disabled'));
+                    
+                    // Показываем результат в конце если это последний вопрос
+                    if (slideIndex === this.slides.length - 1) {
+                        this.showQuizResult();
+                    }
                 } else {
                     // Неправильный ответ
                     option.classList.add('selected-wrong');
                     option.classList.add('disabled');
                     feedbackElement.textContent = selectedOption.feedback || 'Попробуйте еще раз.';
                     feedbackElement.className = 'quiz-feedback visible error';
-                    
-                    // Показываем результат в конце если это последний вопрос
-                    if (slideIndex === this.slides.length - 1) {
-                        this.showQuizResult();
-                    }
+                    // НЕ помечаем слайд как завершенный - нужно дать возможность ответить правильно
                 }
             });
         });
@@ -357,6 +344,14 @@ class Presentation {
             }
         }
         
+        // Для quiz слайда - проверяем, дан ли правильный ответ
+        if (currentSlide.data.type === 'quiz') {
+            if (!currentSlide.selectedCorrectly) {
+                // Еще не ответили правильно - нельзя перейти дальше
+                return;
+            }
+        }
+        
         // Переход к следующему слайду
         if (this.currentSlideIndex < this.slides.length - 1) {
             this.showSlide(this.currentSlideIndex + 1);
@@ -383,6 +378,31 @@ class Presentation {
                 dot.classList.remove('active');
             }
         });
+    }
+    
+    updateNextButton() {
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlide = this.slides[this.currentSlideIndex];
+        
+        if (!currentSlide) return;
+        
+        // Для quiz слайда - блокируем кнопку если не дан правильный ответ
+        if (currentSlide.data.type === 'quiz') {
+            if (!currentSlide.selectedCorrectly) {
+                nextBtn.disabled = true;
+            } else {
+                nextBtn.disabled = false;
+            }
+        } else {
+            nextBtn.disabled = false;
+        }
+        
+        // Если последний слайд - меняем текст кнопки
+        if (this.currentSlideIndex >= this.slides.length - 1) {
+            nextBtn.querySelector('span').textContent = 'Завершить';
+        } else {
+            nextBtn.querySelector('span').textContent = 'Далее';
+        }
     }
 }
 

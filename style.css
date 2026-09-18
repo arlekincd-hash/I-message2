@@ -103,25 +103,32 @@ body {
    PRESENTATION CONTAINER
    ======================================== */
 .presentation-container {
+    position: relative;
     padding-top: 80px;
-    padding-bottom: 100px;
     min-height: 100vh;
 }
 
 .slide {
-    min-height: 100vh;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-xl) var(--spacing-md);
-    position: relative;
     opacity: 0;
+    visibility: hidden;
     transform: translateY(30px);
-    transition: opacity var(--transition-slow), transform var(--transition-slow);
+    transition: opacity var(--transition-slow), transform var(--transition-slow), visibility var(--transition-slow);
 }
 
 .slide.active {
+    position: relative;
+    top: 0;
     opacity: 1;
+    visibility: visible;
     transform: translateY(0);
 }
 
@@ -141,32 +148,7 @@ body {
     flex-direction: column;
 }
 
-@media (max-width: 768px) {
-    .slide-content-wrapper {
-        aspect-ratio: auto;
-        height: auto;
-        min-height: 60vh;
-    }
-}
-
-/* Background Image Slide */
-.slide-bg-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
-}
-
-/* Image + Text Slide */
-.slide-bg-with-text {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
+.slide-bg-image,
 .slide-bg-image-text {
     position: absolute;
     top: 0;
@@ -175,6 +157,20 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .slide-content-wrapper {
+        aspect-ratio: auto;
+        height: auto;
+        min-height: 60vh;
+    }
+}
+
+.slide-bg-with-text {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 .text-overlay-container {
@@ -192,6 +188,7 @@ body {
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-primary) transparent;
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .text-overlay-container::-webkit-scrollbar {
@@ -492,7 +489,7 @@ body {
    ======================================== */
 .next-btn {
     position: fixed;
-    bottom: 30px;
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--accent-primary);
@@ -515,6 +512,12 @@ body {
 .next-btn:hover {
     transform: translateX(-50%) scale(1.05);
     background: #1a56d9;
+}
+
+.next-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateX(-50%);
 }
 
 .next-btn svg {
