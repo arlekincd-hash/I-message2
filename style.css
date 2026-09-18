@@ -43,7 +43,13 @@ body {
 
 .course-title { font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; }
 .author { font-size: 0.9rem; color: var(--text-secondary); }
-.contacts { font-size: 0.8rem; color: var(--text-secondary); }
+.contacts { 
+    font-size: 0.8rem; 
+    color: var(--text-secondary); 
+    text-decoration: none;
+    transition: color 0.3s;
+}
+.contacts:hover { color: var(--accent-blue); }
 
 /* Контейнер слайдов */
 #presentation-container {
@@ -52,6 +58,125 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+
+/* Кнопка Назад */
+.prev-button {
+    position: fixed;
+    bottom: 100px;
+    left: 40px;
+    padding: 16px 32px;
+    background: var(--neutral-gray);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+    z-index: 90;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.prev-button:hover:not(:disabled) {
+    transform: translateY(-3px);
+    background: var(--text-main);
+    color: #fff;
+}
+
+.prev-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Прогресс-бар - анимированная линия */
+.progress-track {
+    width: 150px;
+    height: 4px;
+    background: var(--neutral-gray);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-mint));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+/* Финальный экран */
+.final-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(247, 248, 250, 0.98);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.final-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.final-screen:not(.hidden) {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.final-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 600px;
+}
+
+.final-title {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    color: var(--text-main);
+    margin-bottom: 20px;
+}
+
+.final-result {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+}
+
+.restart-button {
+    padding: 16px 40px;
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(47, 107, 255, 0.3);
+}
+
+.restart-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(47, 107, 255, 0.4);
 }
 
 .slide-wrapper {
@@ -214,6 +339,66 @@ video {
 .play-btn-overlay.hidden { opacity: 0; pointer-events: none; }
 .play-btn-overlay i { color: #fff; transition: color 0.3s; }
 
+/* Видео контролы */
+.video-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 12px 20px;
+    border-radius: 50px;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.video-control-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.video-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.video-progress-track {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.video-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-mint);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+.video-time {
+    color: #fff;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    min-width: 100px;
+    text-align: right;
+}
+
 /* Тест */
 .quiz-container {
     padding: 60px 80px;
@@ -314,7 +499,7 @@ video {
 /* Адаптив */
 @media (max-width: 768px) {
     .top-bar, .bottom-bar { padding: 15px 20px; }
-    .author, .contacts { display: none; }
+    .author { display: none; }
     
     .slide-wrapper { padding: 70px 10px 90px 10px; }
     
@@ -330,4 +515,10 @@ video {
     .info-card { max-width: 100%; padding: 15px; }
     
     .next-button { bottom: 80px; right: 20px; padding: 12px 24px; font-size: 0.9rem; }
+    .prev-button { bottom: 80px; left: 20px; padding: 12px 24px; font-size: 0.9rem; }
+    
+    .progress-track { width: 100px; }
+    
+    .final-title { font-size: 2rem; }
+    .final-result { font-size: 1.2rem; }
 }
