@@ -1,412 +1,270 @@
-// ========================================
-// PRESENTATION LOGIC
-// ========================================
+// Данные презентации (можно расширять)
+const slidesData = [
+    {
+        type: 'image',
+        bg: 'data/slide_00.jpg'
+    },
+    {
+        type: 'text-overlay',
+        bg: 'data/slide_01.jpg',
+        title: 'Иллюзия обратной связи',
+        blocks: [
+            { text: 'То, что мы привыкли называть обратной связью, чаще всего является скрытой критикой или оценкой личности.' },
+            { text: 'Настоящая обратная связь — это не похвала и не ругань. Это нейтральная информация о том, как действия одного человека влияют на другого.' },
+            { text: 'В российской корпоративной и бытовой культуре мы с детства привыкли подменять понятия. Когда мы говорим «ты плохо сделал» или «ты молодец», мы оцениваем личность, а не поступок. Это запускает у собеседника не желание улучшиться, а желание защититься или, наоборот, расслабиться и перестать стараться. Чтобы научиться давать конструктивную обратную связь, нужно сначала отказаться от роли «судьи» и перейти в роль «наблюдателя», который просто фиксирует факты и их последствия.' }
+        ],
+        final: 'Откажитесь от роли "судьи" - станьте "наблюдателем"'
+    },
+    {
+        type: 'video',
+        src: 'data/video2.webm'
+    },
+    {
+        type: 'quiz',
+        question: 'Что является главной целью конструктивной обратной связи, в отличие от критики?',
+        options: [
+            { text: 'Вежливо указать человеку на его ошибки, чтобы он исправился.', correct: false },
+            { text: 'Заставить собеседника почувствовать вину и в следующий раз вести себя иначе.', correct: false },
+            { text: 'Использовать психологическую манипуляцию для получения желаемого результата.', correct: false },
+            { text: 'Дать корректно информацию о том, как действия человека влияют на вас и/или рабочий процесс, без оценки его личности, с целью корректировки или закрепления результата.', correct: true }
+        ],
+        feedbackCorrect: 'Вы ответили верно.',
+        feedbackWrong: 'Вы ответили неверно. Обратная связь — это информация о влиянии, а не приговор личности. Прочие варианты описывают скрытую агрессию или манипуляцию, которые запускают защиту, а не диалог.'
+    }
+];
 
-class Presentation {
-    constructor() {
-        this.currentSlideIndex = 0;
-        this.slides = [];
-        this.quizScore = 0;
-        this.quizTotal = 0;
-        this.content = null;
-        
-        this.init();
-    }
+let currentSlideIndex = 0;
+let isQuizAnswered = false;
+let quizCorrectCount = 0;
+
+const container = document.getElementById('presentation-container');
+const nextBtn = document.getElementById('next-btn');
+const progressBar = document.getElementById('progress-bar');
+
+// Инициализация
+function init() {
+    renderSlides();
+    updateSlideVisibility();
+    updateProgress();
     
-    async init() {
-        try {
-            // Загрузка контента из JSON
-            const response = await fetch('data/content.json');
-            this.content = await response.json();
-            
-            // Обновление заголовков и контактов
-            document.querySelector('.course-title').textContent = this.content.courseTitle;
-            document.querySelector('.author-name').textContent = this.content.author;
-            document.querySelector('.creator-contacts').textContent = this.content.creatorContacts;
-            
-            // Генерация слайдов
-            this.generateSlides();
-            
-            // Инициализация индикаторов
-            this.createIndicators();
-            
-            // Показать первый слайд
-            this.showSlide(0);
-            
-            // Обработчик кнопки "Далее"
-            document.getElementById('nextBtn').addEventListener('click', () => this.nextSlide());
-            
-            // Инициализация иконок Lucide
-            if (window.lucide) {
-                lucide.createIcons();
-            }
-            
-            console.log('Презентация успешно инициализирована');
-        } catch (error) {
-            console.error('Ошибка загрузки презентации:', error);
-        }
-    }
+    nextBtn.addEventListener('click', handleNext);
     
-    generateSlides() {
-        const container = document.getElementById('presentation');
-        container.innerHTML = '';
+    // Обработка скролла внутри слайда для появления текста
+    container.addEventListener('scroll', handleInternalScroll, { passive: true });
+}
+
+function renderSlides() {
+    container.innerHTML = '';
+    slidesData.forEach((slide, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'slide-wrapper';
+        wrapper.dataset.index = index;
         
-        this.slides = this.content.slides.map((slideData, index) => {
-            const slideElement = document.createElement('div');
-            slideElement.className = 'slide';
-            slideElement.dataset.index = index;
-            
-            let contentHTML = '';
-            
-            switch (slideData.type) {
-                case 'image':
-                    contentHTML = this.createImageSlide(slideData);
-                    break;
-                case 'image-text':
-                    contentHTML = this.createImageTextSlide(slideData);
-                    break;
-                case 'video':
-                    contentHTML = this.createVideoSlide(slideData);
-                    break;
-                case 'quiz':
-                    contentHTML = this.createQuizSlide(slideData, index);
-                    break;
-                default:
-                    contentHTML = '<div class="slide-content-wrapper">Неизвестный тип слайда</div>';
-            }
-            
-            slideElement.innerHTML = contentHTML;
-            container.appendChild(slideElement);
-            
-            return {
-                element: slideElement,
-                data: slideData,
-                currentContentIndex: 0,
-                isComplete: false
-            };
-        });
-    }
-    
-    createImageSlide(slideData) {
-        return `
-            <div class="slide-content-wrapper">
-                <img src="${slideData.background}" alt="Слайд ${this.currentSlideIndex + 1}" class="slide-bg-image">
-            </div>
-        `;
-    }
-    
-    createImageTextSlide(slideData) {
-        let contentItemsHTML = '';
+        let contentHTML = '';
         
-        slideData.content.forEach((item, index) => {
-            if (item.type === 'title') {
-                contentItemsHTML += `
-                    <h2 class="slide-title ${item.visibleImmediately ? 'visible' : ''}" data-index="${index}">
-                        ${item.text}
-                    </h2>
-                `;
-            } else if (item.type === 'card') {
-                const iconMap = {
-                    'alert-circle': 'AlertCircle',
-                    'info': 'Info',
-                    'book-open': 'BookOpen',
-                    'check': 'Check',
-                    'x': 'X',
-                    'help-circle': 'HelpCircle'
-                };
-                
-                contentItemsHTML += `
-                    <div class="info-card variant-${item.colorVariant || 1} ${item.visibleImmediately ? 'visible' : ''}" data-index="${index}">
-                        <i data-lucide="${item.icon || 'info'}" class="info-card-icon"></i>
-                        <p class="info-card-text">${item.text}</p>
-                    </div>
-                `;
-            } else if (item.type === 'highlight') {
-                contentItemsHTML += `
-                    <div class="highlight-block ${item.visibleImmediately ? 'visible' : ''}" data-index="${index}">
-                        ${item.text}
-                    </div>
-                `;
-            }
-        });
-        
-        return `
-            <div class="slide-content-wrapper">
-                <div class="slide-bg-with-text">
-                    <img src="${slideData.background}" alt="Фон слайда" class="slide-bg-image-text">
-                    <div class="text-overlay-container">
-                        ${contentItemsHTML}
-                    </div>
+        if (slide.type === 'image') {
+            contentHTML = `<img src="${slide.bg}" class="bg-layer" alt="Slide ${index}">`;
+        } 
+        else if (slide.type === 'text-overlay') {
+            let blocksHTML = slide.blocks.map((block, i) => `
+                <div class="info-card" data-index="${i}">
+                    <div class="icon-box"><i data-lucide="message-square"></i></div>
+                    <div class="card-text">${block.text}</div>
                 </div>
-            </div>
-        `;
-    }
-    
-    createVideoSlide(slideData) {
-        return `
-            <div class="slide-content-wrapper">
-                <div class="video-slide-container">
-                    <video class="video-element" controls poster="${slideData.poster || ''}">
-                        <source src="${slideData.source}" type="video/webm">
-                        <source src="${slideData.source.replace('.webm', '.mp4')}" type="video/mp4">
-                        Ваш браузер не поддерживает видео.
-                    </video>
-                </div>
-            </div>
-        `;
-    }
-    
-    createQuizSlide(slideData, slideIndex) {
-        this.quizTotal++;
-        
-        let optionsHTML = '';
-        slideData.options.forEach((option, optIndex) => {
-            optionsHTML += `
-                <div class="quiz-option" data-option-index="${optIndex}" data-slide-index="${slideIndex}">
-                    ${option.text}
+            `).join('');
+            
+            contentHTML = `
+                <img src="${slide.bg}" class="bg-layer" alt="Background">
+                <div class="text-layer" id="text-layer-${index}">
+                    <h1 class="slide-title">${slide.title}</h1>
+                    ${blocksHTML}
+                    <div class="final-statement" data-final="true">${slide.final}</div>
                 </div>
             `;
-        });
-        
-        return `
-            <div class="slide-content-wrapper">
+        }
+        else if (slide.type === 'video') {
+            contentHTML = `
+                <div class="video-container">
+                    <video id="video-${index}" controlsList="nodownload">
+                        <source src="${slide.src}" type="video/webm">
+                        Ваш браузер не поддерживает видео.
+                    </video>
+                    <div class="play-btn-overlay" id="play-overlay-${index}">
+                        <i data-lucide="play" size="40" fill="white"></i>
+                    </div>
+                </div>
+            `;
+        }
+        else if (slide.type === 'quiz') {
+            let optionsHTML = slide.options.map((opt, i) => `
+                <div class="quiz-option" data-index="${i}" data-correct="${opt.correct}">
+                    <span>${String.fromCharCode(65 + i)}</span> - ${opt.text}
+                </div>
+            `).join('');
+            
+            contentHTML = `
                 <div class="quiz-container">
-                    <h2 class="quiz-question">${slideData.question}</h2>
+                    <h2 class="quiz-question">${slide.question}</h2>
                     <div class="quiz-options">
                         ${optionsHTML}
                     </div>
-                    <div class="quiz-feedback" id="feedback-${slideIndex}"></div>
+                    <div class="quiz-feedback" id="feedback-${index}"></div>
                 </div>
-            </div>
-        `;
-    }
-    
-    createIndicators() {
-        const indicatorsContainer = document.getElementById('slideIndicators');
-        indicatorsContainer.innerHTML = '';
-        
-        this.slides.forEach((_, index) => {
-            const dot = document.createElement('div');
-            dot.className = 'indicator-dot';
-            dot.dataset.index = index;
-            indicatorsContainer.appendChild(dot);
-        });
-    }
-    
-    showSlide(index) {
-        if (index < 0 || index >= this.slides.length) return;
-        
-        // Скрыть все слайды
-        this.slides.forEach(slide => {
-            slide.element.classList.remove('active');
-        });
-        
-        // Показать текущий слайд
-        const currentSlide = this.slides[index];
-        currentSlide.element.classList.add('active');
-        
-        // Обновить прогресс бар
-        this.updateProgress(index);
-        
-        // Обновить индикаторы
-        this.updateIndicators(index);
-        
-        // Инициализировать контент слайда
-        this.initializeSlideContent(currentSlide);
-        
-        // Переинициализировать иконки
-        if (window.lucide) {
-            lucide.createIcons();
+            `;
         }
         
-        this.currentSlideIndex = index;
+        wrapper.innerHTML = contentHTML;
+        container.appendChild(wrapper);
         
-        // Обновить состояние кнопки "Далее"
-        this.updateNextButton();
-    }
-    
-    initializeSlideContent(slide) {
-        if (slide.data.type === 'image-text') {
-            // Показываем элементы по порядку при нажатии кнопки "Далее"
-            const textContainer = slide.element.querySelector('.text-overlay-container');
-            if (textContainer) {
-                const items = textContainer.querySelectorAll('.slide-title, .info-card, .highlight-block');
-                
-                // Показываем только те, что должны быть видны сразу
-                items.forEach(item => {
-                    const dataIndex = parseInt(item.dataset.index);
-                    const contentItem = slide.data.content[dataIndex];
-                    
-                    if (contentItem && contentItem.visibleImmediately) {
-                        item.classList.add('visible');
-                    } else {
-                        item.classList.remove('visible');
-                    }
-                });
-                
-                // Удаляем обработчик скролла - теперь плашки появляются по кнопке
-                // Обработчик больше не нужен
-            }
-        } else if (slide.data.type === 'quiz') {
-            this.initializeQuiz(slide);
-        }
-    }
-    
-    handleTextScroll(container, items, slide) {
-        // Этот метод больше не используется - плашки появляются по кнопке "Далее"
-    }
-    
-    initializeQuiz(slide) {
-        const quizOptions = slide.element.querySelectorAll('.quiz-option');
-        const slideIndex = this.currentSlideIndex;
-        const quizData = slide.data;
-        let hasAnswered = false;
+        // Перерисовка иконок для нового контента
+        lucide.createIcons();
         
-        // Сохраняем состояние в объекте слайда
-        slide.hasAnswered = false;
-        slide.selectedCorrectly = false;
-        
-        quizOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                if (slide.hasAnswered) return; // Блокируем повторные клики если уже ответили правильно
-                
-                const optionIndex = parseInt(option.dataset.optionIndex);
-                const selectedOption = quizData.options[optionIndex];
-                const feedbackElement = document.getElementById(`feedback-${slideIndex}`);
-                
-                if (selectedOption.isCorrect) {
-                    // Правильный ответ
-                    quizOptions.forEach(opt => {
-                        opt.classList.remove('selected-correct', 'selected-wrong', 'disabled');
-                    });
-                    option.classList.add('selected-correct');
-                    feedbackElement.textContent = selectedOption.feedbackSuccess || 'Вы ответили верно.';
-                    feedbackElement.className = 'quiz-feedback visible success';
-                    this.quizScore++;
-                    slide.hasAnswered = true;
-                    slide.selectedCorrectly = true;
-                    slide.isComplete = true;
-                    
-                    // Блокируем все опции
-                    quizOptions.forEach(opt => opt.classList.add('disabled'));
-                    
-                    // Показываем результат в конце если это последний вопрос
-                    if (slideIndex === this.slides.length - 1) {
-                        this.showQuizResult();
-                    }
-                } else {
-                    // Неправильный ответ
-                    option.classList.add('selected-wrong');
-                    option.classList.add('disabled');
-                    feedbackElement.textContent = selectedOption.feedback || 'Попробуйте еще раз.';
-                    feedbackElement.className = 'quiz-feedback visible error';
-                    // НЕ помечаем слайд как завершенный - нужно дать возможность ответить правильно
-                }
-            });
-        });
-    }
-    
-    showQuizResult() {
-        const quizContainer = document.querySelector('.quiz-container');
-        const resultElement = document.createElement('div');
-        resultElement.className = 'quiz-result';
-        resultElement.textContent = `Вы ответили верно на ${this.quizScore} из ${this.quizTotal}`;
-        
-        if (!quizContainer.querySelector('.quiz-result')) {
-            quizContainer.appendChild(resultElement);
-        }
-    }
-    
-    nextSlide() {
-        const currentSlide = this.slides[this.currentSlideIndex];
-        
-        // Проверяем, завершен ли текущий слайд
-        if (currentSlide.data.type === 'image-text') {
-            const textContainer = currentSlide.element.querySelector('.text-overlay-container');
-            if (textContainer) {
-                const items = textContainer.querySelectorAll('.slide-title, .info-card, .highlight-block');
-                const visibleItems = textContainer.querySelectorAll('.visible');
-                
-                if (visibleItems.length < items.length) {
-                    // Показываем следующий элемент
-                    const nextIndex = visibleItems.length;
-                    if (items[nextIndex]) {
-                        items[nextIndex].classList.add('visible');
-                        // Прокручиваем к новому элементу
-                        items[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                    
-                    if (visibleItems.length + 1 >= items.length) {
-                        currentSlide.isComplete = true;
-                    }
-                    return;
-                }
-            }
-        }
-        
-        // Для quiz слайда - проверяем, дан ли правильный ответ
-        if (currentSlide.data.type === 'quiz') {
-            if (!currentSlide.selectedCorrectly) {
-                // Еще не ответили правильно - нельзя перейти дальше
-                return;
-            }
-        }
-        
-        // Переход к следующему слайду
-        if (this.currentSlideIndex < this.slides.length - 1) {
-            this.showSlide(this.currentSlideIndex + 1);
+        // Навешиваем обработчики для видео и тестов
+        if (slide.type === 'video') setupVideo(index);
+        if (slide.type === 'quiz') setupQuiz(index, slide);
+    });
+}
+
+function updateSlideVisibility() {
+    const slides = document.querySelectorAll('.slide-wrapper');
+    slides.forEach((slide, idx) => {
+        slide.classList.remove('active', 'prev', 'next');
+        if (idx === currentSlideIndex) {
+            slide.classList.add('active');
+        } else if (idx < currentSlideIndex) {
+            slide.classList.add('prev');
         } else {
-            // Конец презентации
-            if (this.quizTotal > 0) {
-                this.showQuizResult();
-            }
+            slide.classList.add('next');
+        }
+    });
+    
+    // Сброс состояния кнопки и скролла
+    const currentSlideData = slidesData[currentSlideIndex];
+    isQuizAnswered = false;
+    
+    if (currentSlideData.type === 'quiz') {
+        nextBtn.disabled = true; // Блокируем пока не ответят
+        nextBtn.innerHTML = 'Ответьте на вопрос';
+    } else {
+        nextBtn.disabled = false;
+        nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
+        lucide.createIcons();
+        
+        // Сброс скролла внутри текстового слайда
+        const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
+        if (textLayer) {
+            textLayer.scrollTop = 0;
+            // Скрываем все блоки кроме заголовка initially? 
+            // Нет, по ТЗ первый виден сразу, остальные по скролу.
+            // Но так как мы сбрасываем скролл вверх, логика handleInternalScroll сама покажет первый блок.
+            handleInternalScroll(); 
         }
     }
     
-    updateProgress(index) {
-        const progressFill = document.getElementById('progressFill');
-        const percentage = ((index + 1) / this.slides.length) * 100;
-        progressFill.style.height = `${percentage}%`;
-    }
-    
-    updateIndicators(index) {
-        const dots = document.querySelectorAll('.indicator-dot');
-        dots.forEach((dot, i) => {
-            if (i === index) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
-    }
-    
-    updateNextButton() {
-        const nextBtn = document.getElementById('nextBtn');
-        const currentSlide = this.slides[this.currentSlideIndex];
-        
-        if (!currentSlide) return;
-        
-        // Для quiz слайда - блокируем кнопку если не дан правильный ответ
-        if (currentSlide.data.type === 'quiz') {
-            if (!currentSlide.selectedCorrectly) {
-                nextBtn.disabled = true;
-            } else {
-                nextBtn.disabled = false;
-            }
-        } else {
-            nextBtn.disabled = false;
-        }
-        
-        // Если последний слайд - меняем текст кнопки
-        if (this.currentSlideIndex >= this.slides.length - 1) {
-            nextBtn.querySelector('span').textContent = 'Завершить';
-        } else {
-            nextBtn.querySelector('span').textContent = 'Далее';
-        }
+    updateProgress();
+}
+
+function handleNext() {
+    if (currentSlideIndex < slidesData.length - 1) {
+        currentSlideIndex++;
+        updateSlideVisibility();
+    } else {
+        // Конец презентации
+        alert(`Презентация завершена! Вы ответили верно на ${quizCorrectCount} из 1 вопроса (в демо-режиме).`);
     }
 }
 
-// Инициализация презентации после загрузки DOM
-document.addEventListener('DOMContentLoaded', () => {
-    new Presentation();
-});
+function handleInternalScroll() {
+    const currentSlideData = slidesData[currentSlideIndex];
+    if (currentSlideData.type !== 'text-overlay') return;
+    
+    const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
+    if (!textLayer) return;
+    
+    const scrollTop = textLayer.scrollTop;
+    const threshold = 100; // Порог срабатывания
+    
+    // Показываем блоки по мере скролла
+    const cards = textLayer.querySelectorAll('.info-card');
+    cards.forEach((card, idx) => {
+        // Простая логика: если проскроллили достаточно далеко, показываем следующий
+        // Или можно привязать к положению элемента относительно верха
+        if (scrollTop > (idx * 80)) { 
+            card.classList.add('visible');
+        }
+    });
+    
+    const finalStmt = textLayer.querySelector('.final-statement');
+    if (scrollTop > (cards.length * 80) + 50) {
+        finalStmt.classList.add('visible');
+    }
+}
+
+function setupVideo(index) {
+    const video = document.getElementById(`video-${index}`);
+    const overlay = document.getElementById(`play-overlay-${index}`);
+    
+    overlay.addEventListener('click', () => {
+        video.play();
+        overlay.classList.add('hidden');
+    });
+    
+    video.addEventListener('pause', () => {
+        if (!video.ended) {
+            overlay.classList.remove('hidden');
+        }
+    });
+    
+    video.addEventListener('play', () => {
+        overlay.classList.add('hidden');
+    });
+}
+
+function setupQuiz(index, slideData) {
+    const options = document.querySelectorAll(`#text-layer-${index} .quiz-option, .slide-wrapper[data-index="${index}"] .quiz-option`);
+    // Исправленный селектор, так как quiz-container внутри wrapper
+    const wrapper = document.querySelector(`.slide-wrapper[data-index="${index}"]`);
+    const quizOptions = wrapper.querySelectorAll('.quiz-option');
+    const feedbackEl = wrapper.querySelector('.quiz-feedback');
+    
+    quizOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+            if (isQuizAnswered && opt.classList.contains('selected-correct')) return; // Уже отвечено верно
+            
+            const isCorrect = opt.dataset.correct === 'true';
+            
+            // Сброс предыдущих стилей если это новая попытка (но неправильные остаются красными по ТЗ)
+            // По ТЗ: неправильный остается красным, можно выбрать другой.
+            
+            if (isCorrect) {
+                // Верный ответ
+                quizOptions.forEach(o => o.style.pointerEvents = 'none'); // Блокируем дальнейшие клики
+                opt.classList.add('selected-correct');
+                feedbackEl.textContent = slideData.feedbackCorrect;
+                feedbackEl.className = 'quiz-feedback success';
+                isQuizAnswered = true;
+                quizCorrectCount++;
+                
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
+                lucide.createIcons();
+            } else {
+                // Неверный ответ
+                opt.classList.add('selected-wrong');
+                feedbackEl.textContent = slideData.feedbackWrong;
+                feedbackEl.className = 'quiz-feedback error';
+                // Кнопка Далее остается заблокированной
+                nextBtn.disabled = true;
+                nextBtn.innerHTML = 'Попробуйте еще раз';
+            }
+        });
+    });
+}
+
+function updateProgress() {
+    const percent = ((currentSlideIndex + 1) / slidesData.length) * 100;
+    progressBar.style.width = `${percent}%`;
+}
+
+// Запуск
+init();
