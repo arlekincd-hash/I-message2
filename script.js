@@ -1,4 +1,3 @@
-// Данные презентации
 const slidesData = [
     {
         type: 'image',
@@ -34,8 +33,8 @@ const slidesData = [
 ];
 
 let currentSlideIndex = 0;
+let isQuizSolved = false;
 let quizCorrectCount = 0;
-let isCurrentSlideCompleted = false; // Для блокировки перехода
 
 const container = document.getElementById('presentation-container');
 const nextBtn = document.getElementById('next-btn');
@@ -43,7 +42,7 @@ const progressBar = document.getElementById('progress-bar');
 
 function init() {
     renderSlides();
-    updateSlideVisibility();
+    updateSlideState();
     updateProgress();
     
     nextBtn.addEventListener('click', handleNext);
@@ -59,91 +58,106 @@ function renderSlides() {
         let contentHTML = '';
         
         if (slide.type === 'image') {
-            contentHTML = `<img src="${slide.bg}" class="bg-layer" alt="Slide ${index}">`;
+            contentHTML = `<div class="content-box"><img src="${slide.bg}" class="bg-layer" alt="Slide ${index}"></div>`;
         } 
         else if (slide.type === 'text-overlay') {
             let blocksHTML = slide.blocks.map((block, i) => `
                 <div class="info-card" data-index="${i}">
-                    <div class="icon-box"><i data-lucide="message-square"></i></div>
+                    <div class="icon-box"><i data-lucide="message-circle"></i></div>
                     <div class="card-text">${block.text}</div>
                 </div>
             `).join('');
             
             contentHTML = `
-                <img src="${slide.bg}" class="bg-layer" alt="Background">
-                <div class="text-layer" id="text-layer-${index}">
-                    <h1 class="slide-title">${slide.title}</h1>
-                    ${blocksHTML}
-                    <div class="final-statement" data-final="true">${slide.final}</div>
+                <div class="content-box">
+                    <img src="${slide.bg}" class="bg-layer" alt="Background">
+                    <div class="text-layer" id="text-layer-${index}">
+                        <h1 class="slide-title">${slide.title}</h1>
+                        ${blocksHTML}
+                        <div class="final-statement" data-final="true">${slide.final}</div>
+                    </div>
                 </div>
             `;
         }
         else if (slide.type === 'video') {
             contentHTML = `
-                <div class="video-container">
-                    <video id="video-${index}" controlsList="nodownload">
-                        <source src="${slide.src}" type="video/webm">
-                        Ваш браузер не поддерживает видео.
-                    </video>
-                    <div class="play-btn-overlay" id="play-overlay-${index}">
-                        <i data-lucide="play" size="40" fill="white"></i>
+                <div class="content-box">
+                    <div class="video-container">
+                        <video id="video-${index}" preload="metadata">
+                            <source src="${slide.src}" type="video/webm">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                        <div class="play-btn-overlay" id="play-overlay-${index}">
+                            <i data-lucide="play" size="40" fill="white"></i>
+                        </div>
                     </div>
                 </div>
             `;
         }
         else if (slide.type === 'quiz') {
             let optionsHTML = slide.options.map((opt, i) => `
-                <div class="quiz-option" data-index="${i}" data-correct="${opt.correct}">
-                    <span style="font-weight:bold; color:var(--accent-blue)">${String.fromCharCode(65 + i)}</span> 
-                    ${opt.text}
+                <div class="quiz-option" data-correct="${opt.correct}">
+                    <span style="font-weight:700; margin-right:10px;">${String.fromCharCode(65 + i)}.</span> ${opt.text}
                 </div>
             `).join('');
             
             contentHTML = `
-                <div class="quiz-container">
-                    <h2 class="quiz-question">${slide.question}</h2>
-                    <div class="quiz-options">
-                        ${optionsHTML}
+                <div class="content-box">
+                    <div class="quiz-container">
+                        <h2 class="quiz-question">${slide.question}</h2>
+                        <div class="quiz-options">
+                            ${optionsHTML}
+                        </div>
+                        <div class="quiz-feedback" id="feedback-${index}"></div>
                     </div>
-                    <div class="quiz-feedback" id="feedback-${index}"></div>
                 </div>
             `;
         }
         
         wrapper.innerHTML = contentHTML;
         container.appendChild(wrapper);
-        
-        // Перерисовка иконок
         lucide.createIcons();
         
-        // Навешиваем обработчики
         if (slide.type === 'video') setupVideo(index);
         if (slide.type === 'quiz') setupQuiz(index, slide);
-        if (slide.type === 'text-overlay') setupTextScroll(index);
+        if (slide.type === 'text-overlay') setupScrollListener(index);
     });
 }
 
-function updateSlideVisibility() {
+function updateSlideState() {
+    // 1. Останавливаем видео на предыдущем слайде (если было)
+    const prevVideo = document.querySelector(`video:not(#video-${currentSlideIndex})`);
+    if (prevVideo) {
+        prevVideo.pause();
+        prevVideo.currentTime = 0; // Сброс в начало (опционально)
+    }
+    
+    // Обновляем классы видимости
     const slides = document.querySelectorAll('.slide-wrapper');
     slides.forEach((slide, idx) => {
         slide.classList.remove('active', 'prev', 'next');
-        if (idx === currentSlideIndex) {
-            slide.classList.add('active');
-        } else if (idx < currentSlideIndex) {
-            slide.classList.add('prev');
-        } else {
-            slide.classList.add('next');
-        }
+        if (idx === currentSlideIndex) slide.classList.add('active');
+        else if (idx < currentSlideIndex) slide.classList.add('prev');
+        else slide.classList.add('next');
     });
     
-    const currentSlideData = slidesData[currentSlideIndex];
-    isCurrentSlideCompleted = false;
+    // Сброс состояния кнопки и переменных
+    const currentData = slidesData[currentSlideIndex];
+    isQuizSolved = false;
     
-    // Сброс состояния кнопки
-    if (currentSlideData.type === 'quiz') {
+    if (currentData.type === 'quiz') {
         nextBtn.disabled = true;
-        nextBtn.innerHTML = 'Ответьте на вопрос';
-    } else if (currentSlideData.type === 'video') {
+        nextBtn.innerHTML = 'Выберите вариант ответа';
+        // Сброс стилей теста
+        const wrapper = document.querySelector(`.slide-wrapper[data-index="${currentSlideIndex}"]`);
+        if(wrapper) {
+            wrapper.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected-correct', 'selected-wrong');
+                opt.style.pointerEvents = 'auto';
+            });
+            wrapper.querySelector('.quiz-feedback').style.display = 'none';
+        }
+    } else if (currentData.type === 'video') {
         nextBtn.disabled = false;
         nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
         lucide.createIcons();
@@ -152,18 +166,18 @@ function updateSlideVisibility() {
         nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
         lucide.createIcons();
         
-        // Сброс скролла для текстового слайда
-        if (currentSlideData.type === 'text-overlay') {
-            const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
-            if (textLayer) {
-                textLayer.scrollTop = 0;
-                // Скрываем все блоки, кроме заголовка, при входе
-                textLayer.querySelectorAll('.info-card, .final-statement').forEach(el => el.classList.remove('visible'));
-                // Показываем первый блок сразу (опционально, или по скролу)
-                // По ТЗ: "что то сразу на слайде". Пусть будет заголовок + первый блок виден сразу?
-                // Или первый блок появляется при легком скролле. Оставим логику скролла.
-                setTimeout(() => handleTextScroll(currentSlideIndex), 100);
-            }
+        // Сброс скролла и видимости блоков для текстового слайда
+        const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
+        if (textLayer) {
+            textLayer.scrollTop = 0;
+            textLayer.querySelectorAll('.info-card, .final-statement').forEach(el => el.classList.remove('visible'));
+            // Показываем первый блок сразу? Нет, по логике "по скролу". 
+            // Но чтобы пользователь понял, что можно скроллить, покажем хотя бы заголовок (он всегда виден)
+            // А первый блок появится при первом движении скролла или можно показать сразу:
+            setTimeout(() => {
+                 const firstCard = textLayer.querySelector('.info-card');
+                 if(firstCard) firstCard.classList.add('visible');
+            }, 300);
         }
     }
     
@@ -173,41 +187,33 @@ function updateSlideVisibility() {
 function handleNext() {
     if (currentSlideIndex < slidesData.length - 1) {
         currentSlideIndex++;
-        updateSlideVisibility();
+        updateSlideState();
     } else {
-        alert(`Презентация завершена! Вы ответили верно на ${quizCorrectCount} из 1 вопроса.`);
+        alert(`Курс завершен! Правильных ответов: ${quizCorrectCount} из 1.`);
     }
 }
 
-// Логика скролла внутри текстового слайда
-function setupTextScroll(index) {
+function setupScrollListener(index) {
     const textLayer = document.getElementById(`text-layer-${index}`);
     if (!textLayer) return;
     
-    textLayer.addEventListener('scroll', () => handleTextScroll(index));
-}
-
-function handleTextScroll(index) {
-    const textLayer = document.getElementById(`text-layer-${index}`);
-    if (!textLayer) return;
-    
-    const scrollTop = textLayer.scrollTop;
-    const cards = textLayer.querySelectorAll('.info-card');
-    const finalStmt = textLayer.querySelector('.final-statement');
-    
-    // Порог появления блоков (каждые 100px скролла открывает новый блок)
-    cards.forEach((card, idx) => {
-        if (scrollTop > (idx * 80)) {
-            card.classList.add('visible');
-        } else {
-            card.classList.remove('visible'); // Можно убрать, если хотим чтобы оставались
+    textLayer.addEventListener('scroll', () => {
+        const scrollTop = textLayer.scrollTop;
+        const cards = textLayer.querySelectorAll('.info-card');
+        const finalStmt = textLayer.querySelector('.final-statement');
+        
+        // Логика появления: чем ниже скролл, тем больше блоков видно
+        cards.forEach((card, i) => {
+            // Порог срабатывания: каждый следующий блок появляется после прокрутки ~150px от предыдущего
+            if (scrollTop > (i * 100) - 50) {
+                card.classList.add('visible');
+            }
+        });
+        
+        if (scrollTop > (cards.length * 100) + 100) {
+            finalStmt.classList.add('visible');
         }
     });
-    
-    // Появление финальной фразы в конце
-    if (scrollTop > (cards.length * 80) + 50) {
-        finalStmt.classList.add('visible');
-    }
 }
 
 function setupVideo(index) {
@@ -215,61 +221,57 @@ function setupVideo(index) {
     const overlay = document.getElementById(`play-overlay-${index}`);
     
     if (!video || !overlay) return;
+
+    const togglePlay = () => {
+        if (video.paused) {
+            video.play();
+            overlay.classList.add('hidden');
+        } else {
+            video.pause();
+            overlay.classList.remove('hidden');
+        }
+    };
+
+    overlay.addEventListener('click', togglePlay);
+    video.addEventListener('click', togglePlay);
     
-    overlay.addEventListener('click', () => {
-        video.play();
-        overlay.classList.add('hidden');
+    // Если видео кончилось, показываем кнопку снова
+    video.addEventListener('ended', () => {
+        overlay.classList.remove('hidden');
     });
-    
-    video.addEventListener('pause', () => {
-        if (!video.ended) overlay.classList.remove('hidden');
-    });
-    video.addEventListener('play', () => overlay.classList.add('hidden'));
 }
 
 function setupQuiz(index, slideData) {
-    // Находим обертку текущего слайда
     const wrapper = document.querySelector(`.slide-wrapper[data-index="${index}"]`);
-    if (!wrapper) return;
-    
-    const quizOptions = wrapper.querySelectorAll('.quiz-option');
+    const options = wrapper.querySelectorAll('.quiz-option');
     const feedbackEl = wrapper.querySelector('.quiz-feedback');
-    let answeredCorrectly = false;
     
-    quizOptions.forEach(opt => {
+    options.forEach(opt => {
         opt.addEventListener('click', () => {
-            if (answeredCorrectly) return; // Если уже верно ответили, клики игнорируем
+            if (isQuizSolved && opt.classList.contains('selected-correct')) return;
             
             const isCorrect = opt.dataset.correct === 'true';
             
             if (isCorrect) {
-                // Верный ответ
-                answeredCorrectly = true;
-                isCurrentSlideCompleted = true;
+                // Верно
+                isQuizSolved = true;
+                quizCorrectCount++;
                 
-                // Визуал
-                quizOptions.forEach(o => o.style.pointerEvents = 'none'); // Блокируем все
+                options.forEach(o => o.style.pointerEvents = 'none'); // Блокируем все
                 opt.classList.add('selected-correct');
                 
                 feedbackEl.textContent = slideData.feedbackCorrect;
                 feedbackEl.className = 'quiz-feedback success';
                 
-                quizCorrectCount++;
-                
-                // Разблокируем кнопку Далее
                 nextBtn.disabled = false;
                 nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
                 lucide.createIcons();
-                
             } else {
-                // Неверный ответ
+                // Неверно
                 opt.classList.add('selected-wrong');
-                // Остальные остаются активными для повторной попытки
-                
                 feedbackEl.textContent = slideData.feedbackWrong;
                 feedbackEl.className = 'quiz-feedback error';
                 
-                // Кнопка Далее заблокирована
                 nextBtn.disabled = true;
                 nextBtn.innerHTML = 'Попробуйте другой вариант';
             }
@@ -282,5 +284,4 @@ function updateProgress() {
     progressBar.style.width = `${percent}%`;
 }
 
-// Запуск
 init();
