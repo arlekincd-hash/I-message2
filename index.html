@@ -41,17 +41,14 @@
     </footer>
 
     <!-- Кнопка Далее -->
-    <button id="next-btn" class="next-button">
-        Далее <i data-lucide="arrow-down"></i>
+    <button id="next-btn" class="next-button" disabled>
+        Ответьте на вопрос <i data-lucide="arrow-down"></i>
     </button>
 
     <!-- Скрипт -->
     <script src="script.js"></script>
     <script>
-        // Инициализация иконок после загрузки страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-        });
+        lucide.createIcons();
     </script>
 </body>
 </html>
