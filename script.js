@@ -1,4 +1,4 @@
-// Данные презентации (можно расширять)
+// Данные презентации
 const slidesData = [
     {
         type: 'image',
@@ -34,23 +34,19 @@ const slidesData = [
 ];
 
 let currentSlideIndex = 0;
-let isQuizAnswered = false;
 let quizCorrectCount = 0;
+let isCurrentSlideCompleted = false; // Для блокировки перехода
 
 const container = document.getElementById('presentation-container');
 const nextBtn = document.getElementById('next-btn');
 const progressBar = document.getElementById('progress-bar');
 
-// Инициализация
 function init() {
     renderSlides();
     updateSlideVisibility();
     updateProgress();
     
     nextBtn.addEventListener('click', handleNext);
-    
-    // Обработка скролла внутри слайда для появления текста
-    container.addEventListener('scroll', handleInternalScroll, { passive: true });
 }
 
 function renderSlides() {
@@ -98,7 +94,8 @@ function renderSlides() {
         else if (slide.type === 'quiz') {
             let optionsHTML = slide.options.map((opt, i) => `
                 <div class="quiz-option" data-index="${i}" data-correct="${opt.correct}">
-                    <span>${String.fromCharCode(65 + i)}</span> - ${opt.text}
+                    <span style="font-weight:bold; color:var(--accent-blue)">${String.fromCharCode(65 + i)}</span> 
+                    ${opt.text}
                 </div>
             `).join('');
             
@@ -116,12 +113,13 @@ function renderSlides() {
         wrapper.innerHTML = contentHTML;
         container.appendChild(wrapper);
         
-        // Перерисовка иконок для нового контента
+        // Перерисовка иконок
         lucide.createIcons();
         
-        // Навешиваем обработчики для видео и тестов
+        // Навешиваем обработчики
         if (slide.type === 'video') setupVideo(index);
         if (slide.type === 'quiz') setupQuiz(index, slide);
+        if (slide.type === 'text-overlay') setupTextScroll(index);
     });
 }
 
@@ -138,26 +136,34 @@ function updateSlideVisibility() {
         }
     });
     
-    // Сброс состояния кнопки и скролла
     const currentSlideData = slidesData[currentSlideIndex];
-    isQuizAnswered = false;
+    isCurrentSlideCompleted = false;
     
+    // Сброс состояния кнопки
     if (currentSlideData.type === 'quiz') {
-        nextBtn.disabled = true; // Блокируем пока не ответят
+        nextBtn.disabled = true;
         nextBtn.innerHTML = 'Ответьте на вопрос';
+    } else if (currentSlideData.type === 'video') {
+        nextBtn.disabled = false;
+        nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
+        lucide.createIcons();
     } else {
         nextBtn.disabled = false;
         nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
         lucide.createIcons();
         
-        // Сброс скролла внутри текстового слайда
-        const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
-        if (textLayer) {
-            textLayer.scrollTop = 0;
-            // Скрываем все блоки кроме заголовка initially? 
-            // Нет, по ТЗ первый виден сразу, остальные по скролу.
-            // Но так как мы сбрасываем скролл вверх, логика handleInternalScroll сама покажет первый блок.
-            handleInternalScroll(); 
+        // Сброс скролла для текстового слайда
+        if (currentSlideData.type === 'text-overlay') {
+            const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
+            if (textLayer) {
+                textLayer.scrollTop = 0;
+                // Скрываем все блоки, кроме заголовка, при входе
+                textLayer.querySelectorAll('.info-card, .final-statement').forEach(el => el.classList.remove('visible'));
+                // Показываем первый блок сразу (опционально, или по скролу)
+                // По ТЗ: "что то сразу на слайде". Пусть будет заголовок + первый блок виден сразу?
+                // Или первый блок появляется при легком скролле. Оставим логику скролла.
+                setTimeout(() => handleTextScroll(currentSlideIndex), 100);
+            }
         }
     }
     
@@ -169,32 +175,36 @@ function handleNext() {
         currentSlideIndex++;
         updateSlideVisibility();
     } else {
-        // Конец презентации
-        alert(`Презентация завершена! Вы ответили верно на ${quizCorrectCount} из 1 вопроса (в демо-режиме).`);
+        alert(`Презентация завершена! Вы ответили верно на ${quizCorrectCount} из 1 вопроса.`);
     }
 }
 
-function handleInternalScroll() {
-    const currentSlideData = slidesData[currentSlideIndex];
-    if (currentSlideData.type !== 'text-overlay') return;
+// Логика скролла внутри текстового слайда
+function setupTextScroll(index) {
+    const textLayer = document.getElementById(`text-layer-${index}`);
+    if (!textLayer) return;
     
-    const textLayer = document.getElementById(`text-layer-${currentSlideIndex}`);
+    textLayer.addEventListener('scroll', () => handleTextScroll(index));
+}
+
+function handleTextScroll(index) {
+    const textLayer = document.getElementById(`text-layer-${index}`);
     if (!textLayer) return;
     
     const scrollTop = textLayer.scrollTop;
-    const threshold = 100; // Порог срабатывания
-    
-    // Показываем блоки по мере скролла
     const cards = textLayer.querySelectorAll('.info-card');
+    const finalStmt = textLayer.querySelector('.final-statement');
+    
+    // Порог появления блоков (каждые 100px скролла открывает новый блок)
     cards.forEach((card, idx) => {
-        // Простая логика: если проскроллили достаточно далеко, показываем следующий
-        // Или можно привязать к положению элемента относительно верха
-        if (scrollTop > (idx * 80)) { 
+        if (scrollTop > (idx * 80)) {
             card.classList.add('visible');
+        } else {
+            card.classList.remove('visible'); // Можно убрать, если хотим чтобы оставались
         }
     });
     
-    const finalStmt = textLayer.querySelector('.final-statement');
+    // Появление финальной фразы в конце
     if (scrollTop > (cards.length * 80) + 50) {
         finalStmt.classList.add('visible');
     }
@@ -204,58 +214,64 @@ function setupVideo(index) {
     const video = document.getElementById(`video-${index}`);
     const overlay = document.getElementById(`play-overlay-${index}`);
     
+    if (!video || !overlay) return;
+    
     overlay.addEventListener('click', () => {
         video.play();
         overlay.classList.add('hidden');
     });
     
     video.addEventListener('pause', () => {
-        if (!video.ended) {
-            overlay.classList.remove('hidden');
-        }
+        if (!video.ended) overlay.classList.remove('hidden');
     });
-    
-    video.addEventListener('play', () => {
-        overlay.classList.add('hidden');
-    });
+    video.addEventListener('play', () => overlay.classList.add('hidden'));
 }
 
 function setupQuiz(index, slideData) {
-    const options = document.querySelectorAll(`#text-layer-${index} .quiz-option, .slide-wrapper[data-index="${index}"] .quiz-option`);
-    // Исправленный селектор, так как quiz-container внутри wrapper
+    // Находим обертку текущего слайда
     const wrapper = document.querySelector(`.slide-wrapper[data-index="${index}"]`);
+    if (!wrapper) return;
+    
     const quizOptions = wrapper.querySelectorAll('.quiz-option');
     const feedbackEl = wrapper.querySelector('.quiz-feedback');
+    let answeredCorrectly = false;
     
     quizOptions.forEach(opt => {
         opt.addEventListener('click', () => {
-            if (isQuizAnswered && opt.classList.contains('selected-correct')) return; // Уже отвечено верно
+            if (answeredCorrectly) return; // Если уже верно ответили, клики игнорируем
             
             const isCorrect = opt.dataset.correct === 'true';
             
-            // Сброс предыдущих стилей если это новая попытка (но неправильные остаются красными по ТЗ)
-            // По ТЗ: неправильный остается красным, можно выбрать другой.
-            
             if (isCorrect) {
                 // Верный ответ
-                quizOptions.forEach(o => o.style.pointerEvents = 'none'); // Блокируем дальнейшие клики
+                answeredCorrectly = true;
+                isCurrentSlideCompleted = true;
+                
+                // Визуал
+                quizOptions.forEach(o => o.style.pointerEvents = 'none'); // Блокируем все
                 opt.classList.add('selected-correct');
+                
                 feedbackEl.textContent = slideData.feedbackCorrect;
                 feedbackEl.className = 'quiz-feedback success';
-                isQuizAnswered = true;
+                
                 quizCorrectCount++;
                 
+                // Разблокируем кнопку Далее
                 nextBtn.disabled = false;
                 nextBtn.innerHTML = 'Далее <i data-lucide="arrow-down"></i>';
                 lucide.createIcons();
+                
             } else {
                 // Неверный ответ
                 opt.classList.add('selected-wrong');
+                // Остальные остаются активными для повторной попытки
+                
                 feedbackEl.textContent = slideData.feedbackWrong;
                 feedbackEl.className = 'quiz-feedback error';
-                // Кнопка Далее остается заблокированной
+                
+                // Кнопка Далее заблокирована
                 nextBtn.disabled = true;
-                nextBtn.innerHTML = 'Попробуйте еще раз';
+                nextBtn.innerHTML = 'Попробуйте другой вариант';
             }
         });
     });
