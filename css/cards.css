@@ -1,0 +1,68 @@
+/*
+ * css/cards.css — стили текстовых плашек и типов слайдов
+ * Можно смотреть, но НЕ ТРОГАТЬ — это часть движка
+ * Автор материала работает только с config/theme.css
+ */
+
+/* ============================================
+   REVEAL BLOCKS (ПЛАШКИ С ПОЯВЛЕНИЕМ)
+   ============================================ */
+.reveal-block {
+    /* Базовые стили задаются в js/reveal.js через CSS-переменные темы */
+}
+
+/* Fallback для браузеров без backdrop-filter */
+@supports not (backdrop-filter: blur(8px)) {
+    .reveal-block {
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+}
+
+/* ============================================
+   QUIZ OPTION LETTERS (БУКВЫ ВАРИАНТОВ ОТВЕТА)
+   ============================================ */
+.quiz-option-letter {
+    font-weight: 700;
+    margin-right: 10px;
+    color: var(--color-accent, #2F6BFF);
+    min-width: 24px;
+    display: inline-block;
+}
+
+/* ============================================
+   VIDEO PLAY OVERLAY ICONS
+   ============================================ */
+.video-play-overlay svg {
+    width: 40px;
+    height: 40px;
+}
+
+.video-controls svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS (АДАПТИВ ДЛЯ МАЛЕНЬКИХ ЭКРАНОВ)
+   ============================================ */
+@media (max-height: 700px) {
+    .quiz-container {
+        padding: 30px 40px;
+    }
+    
+    .quiz-question {
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+    }
+    
+    .quiz-option {
+        padding: 15px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .quiz-container {
+        padding: 40px 50px;
+    }
+}
