@@ -1,0 +1,38 @@
+/* 
+ * config/theme.css — ВСЯ визуальная настройка платформы
+ * Можно менять: цвета, тени, радиусы, размеры шрифтов, отступы
+ * НЕ ТРОГАЙТЕ: css/base.css и css/cards.css — это движок
+ */
+
+:root {
+    /* === ЦВЕТА === */
+    --color-bg: #F7F8FA;              /* фон страницы */
+    --color-ink: #172433;             /* основной текст */
+    --color-ink-soft: #6B7885;        /* вторичный текст */
+    --color-accent: #2F6BFF;          /* акцент (синий) */
+    --color-accent-2: #55C9C2;        /* дополнительный акцент (мята) */
+    --color-error: #FF9D86;           /* ошибка (коралл) */
+    --color-success: #55C9C2;         /* верный ответ (мята) */
+    --color-card: rgba(255, 255, 255, 0.92);  /* фон плашки (с прозрачностью) */
+    --color-card-border: rgba(255, 255, 255, 0.5); /* тонкая граница плашки */
+    --color-header-bg: rgba(247, 248, 250, 0.95); /* фон шапки (с прозрачностью) */
+    --color-footer-bg: rgba(247, 248, 250, 0.95); /* фон подвала (с прозрачностью) */
+    
+    /* === ТИПОГРАФИКА === */
+    --font-display: 'Unbounded', sans-serif;
+    --font-text: 'Golos Text', sans-serif;
+    --font-size-h1: 2.8rem;
+    --font-size-h2: 2rem;
+    --font-size-text: 1.15rem;
+    --font-size-caption: 0.85rem;
+    
+    /* === ГЕОМЕТРИЯ И «ВОЗДУХ» === */
+    --radius-card: 16px;              /* скругление плашек */
+    --radius-button: 50px;            /* скругление кнопок */
+    --card-blur: 8px;                 /* размытие стекла */
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.04); /* мягкая тень */
+    --gap: 20px;                      /* отступ вокруг слайда */
+    --max-slide-width: 1600px;        /* предельная ширина слайда */
+    --header-height: 70px;            /* высота шапки */
+    --footer-height: 70px;            /* высота подвала */
+}

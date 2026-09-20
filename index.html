@@ -3,50 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Я-сообщения</title>
+    <title>Платформа презентаций</title>
     
-    <!-- Шрифты -->
+    <!-- Шрифты Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Иконки -->
+    <!-- Иконки Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Стили -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Тема (настройки цветов, шрифтов) -->
+    <link rel="stylesheet" href="config/theme.css">
+    
+    <!-- Стили движка (НЕ ТРОГАТЬ автору материала) -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/cards.css">
 </head>
 <body>
 
-    <!-- Верхняя панель -->
-    <header class="top-bar">
-        <div class="course-title">Я-сообщения</div>
-        <div class="author">Сафронов Денис</div>
+    <!-- Шапка (Header) -->
+    <header class="header">
+        <div id="header-course-title" class="header-course-title">Название курса</div>
+        <div id="header-author" class="header-author">Автор</div>
     </header>
 
-    <!-- Контейнер презентации -->
+    <!-- Контейнер презентации (Сцена) -->
     <main id="presentation-container">
         <!-- Слайды генерируются через JS -->
     </main>
 
-    <!-- Нижняя панель -->
-    <footer class="bottom-bar">
-        <div class="progress-container">
+    <!-- Подвал (Footer) -->
+    <footer class="footer">
+        <div class="footer-progress-container">
             <div class="progress-track">
-                <div class="progress-fill" id="progress-bar"></div>
+                <div id="progress-bar" class="progress-fill"></div>
             </div>
         </div>
-        <a href="https://telegram.me/SDM_ryazan" class="contacts" target="_blank" rel="noopener noreferrer">Разработчик: Сафронов Денис</a>
+        <a id="footer-contacts" class="footer-contacts" href="#" target="_blank" rel="noopener noreferrer">Контакты</a>
     </footer>
 
     <!-- Кнопка Назад -->
-    <button id="prev-btn" class="prev-button" disabled>
-        <i data-lucide="arrow-up"></i> Назад
+    <button id="prev-btn" class="nav-button" disabled>
+        <i data-lucide="chevron-left"></i> <span id="prev-btn-text">Назад</span>
     </button>
 
     <!-- Кнопка Далее -->
-    <button id="next-btn" class="next-button" disabled>
-        Далее <i data-lucide="arrow-down"></i>
+    <button id="next-btn" class="nav-button" disabled>
+        <span id="next-btn-text">Далее</span> <i data-lucide="chevron-right"></i>
     </button>
 
     <!-- Финальный экран -->
@@ -55,15 +59,28 @@
             <h1 class="final-title">Курс завершен!</h1>
             <p class="final-result" id="final-result"></p>
             <button id="restart-btn" class="restart-button">
-                Пройти заново <i data-lucide="refresh-cw"></i>
+                <i data-lucide="refresh-cw"></i> <span id="restart-btn-text">Пройти заново</span>
             </button>
         </div>
     </div>
 
-    <!-- Скрипт -->
-    <script src="script.js"></script>
+    <!-- КОНФИГУРАЦИЯ (можно менять настройки курса) -->
+    <script src="config/config.js"></script>
+    
+    <!-- КОНТЕНТ (можно менять слайды, тексты, вопросы) -->
+    <script src="content/content.js"></script>
+    
+    <!-- ДВИЖОК (НЕ ТРОГАТЬ автору материала) -->
+    <script src="js/utils.js"></script>
+    <script src="js/reveal.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Инициализация иконок Lucide -->
     <script>
-        lucide.createIcons();
+        // Перерисовка иконок после загрузки всех скриптов
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => lucide.createIcons(), 100);
+        });
     </script>
 </body>
 </html>
