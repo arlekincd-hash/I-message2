@@ -18,7 +18,7 @@
     
     /* Дизайн "Стекло" (Glassmorphism) */
     background: rgba(255, 255, 255, 0.85); /* Полупрозрачный белый */
-    backdrop-filter: blur(12px);           /* Размытие фона под карточкой */
+    backdrop-filter: blur(20px);           /* Размытие фона под карточкой */
     -webkit-backdrop-filter: blur(12px);   /* Для Safari */
     
     /* Границы и скругления */
