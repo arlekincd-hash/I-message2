@@ -101,7 +101,7 @@ const CONTENT = {
             id: 'slide_02',
             type: 'video',
             media: 'data/video2.webm',
-            poster: 'data/slide_00.jpg'
+            poster: 'data/slide_01.jpg'
         },
         {
             id: 'slide_03',
