@@ -60,6 +60,9 @@ function init() {
     
     // Обработчик изменения размера окна (throttle)
     window.addEventListener('resize', throttle(recalculateSlideSize, 100));
+    
+    // ВАЖНО: Явный пересчёт размеров слайда после инициализации
+    recalculateSlideSize();
 }
 
 /**
@@ -283,6 +286,8 @@ function recalculateSlideSize() {
         slide.style.height = `${slideHeight}px`;
         slide.style.width = `${slideWidth}px`;
     });
+    
+    console.log(`[recalculateSlideSize] viewport=${viewportWidth}x${viewportHeight}, slide=${slideWidth.toFixed(0)}x${slideHeight.toFixed(0)}`);
 }
 
 // ============================================
@@ -640,9 +645,12 @@ function initQuiz(slideEl, slideData, index) {
     });
 }
 
-// Запуск приложения после загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// Запуск приложения после полной загрузки ВСЕХ ресурсов (шрифты, картинки, стили)
+window.addEventListener('load', () => {
+    // Дополнительная гарантия через requestAnimationFrame для отрисовки
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            init();
+        });
+    });
+});

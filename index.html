@@ -77,8 +77,8 @@
     
     <!-- Инициализация иконок Lucide -->
     <script>
-        // Перерисовка иконок после загрузки всех скриптов
-        document.addEventListener('DOMContentLoaded', function() {
+        // Перерисовка иконок после полной загрузки страницы
+        window.addEventListener('load', function() {
             setTimeout(() => lucide.createIcons(), 100);
         });
     </script>
