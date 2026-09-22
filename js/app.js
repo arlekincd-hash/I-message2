@@ -641,8 +641,4 @@ function initQuiz(slideEl, slideData, index) {
 }
 
 // Запуск приложения после загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+window.addEventListener('load', init);
