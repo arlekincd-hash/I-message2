@@ -50,7 +50,33 @@ function init() {
     dom.restartBtn = document.getElementById('restart-btn');
     
     // Применяем настройки из config/config.js
-    applyConfig();
+/**
+ * Применение настроек из CONFIG
+ */
+function applyConfig() {
+    if (typeof CONFIG !== 'undefined') {
+        dom.headerTitle.textContent = CONFIG.courseTitle || 'Курс';
+        dom.headerAuthor.textContent = CONFIG.author || '';
+        
+        // Исправленная логика для контактов: создаем ссылку, а не текст
+        const contactsUrl = CONFIG.creatorContacts;
+        const contactsLabel = CONFIG.creatorContactsLabel || contactsUrl;
+        
+        if (contactsUrl) {
+            // Очищаем контейнер
+            dom.footerContacts.innerHTML = '';
+            dom.footerContacts.href = contactsUrl;
+            dom.footerContacts.target = '_blank';
+            dom.footerContacts.rel = 'noopener noreferrer';
+            dom.footerContacts.textContent = contactsLabel || contactsUrl;
+            dom.footerContacts.style.textDecoration = 'none';
+            dom.footerContacts.style.color = 'inherit';
+        } else {
+            dom.footerContacts.textContent = contactsLabel || '';
+            dom.footerContacts.removeAttribute('href');
+        }
+    }
+}
     
     // Загружаем контент и рендерим слайды
     loadContentAndRender();
