@@ -50,10 +50,6 @@ function init() {
     dom.restartBtn = document.getElementById('restart-btn');
     
     // Применяем настройки из config/config.js
-/**
- * Применение настроек из CONFIG
- */
-    // Применяем настройки из config/config.js
     applyConfig();
     
     // Загружаем контент и рендерим слайды
@@ -74,17 +70,42 @@ function init() {
  */
 function applyConfig() {
     if (typeof CONFIG !== 'undefined') {
+        // 1. Название и Автор
         dom.headerTitle.textContent = CONFIG.courseTitle || 'Курс';
         dom.headerAuthor.textContent = CONFIG.author || '';
-        dom.footerContacts.textContent = CONFIG.creatorContactsLabel || CONFIG.creatorContacts || '';
-        if (CONFIG.creatorContacts && !CONFIG.creatorContactsLabel) {
-            dom.footerContacts.href = CONFIG.creatorContacts;
-            dom.footerContacts.target = '_blank';
-            dom.footerContacts.rel = 'noopener noreferrer';
+        
+        // 2. Контакты (ИСПРАВЛЕНО)
+        const contactsUrl = CONFIG.creatorContacts;
+        const contactsText = CONFIG.creatorContactsLabel || contactsUrl || 'Контакты';
+        
+        // Очищаем контейнер контактов
+        dom.footerContacts.innerHTML = '';
+        
+        if (contactsUrl) {
+            // Создаем ссылку явно, независимо от типа элемента в HTML
+            const link = document.createElement('a');
+            link.href = contactsUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = contactsText;
+            link.style.textDecoration = 'none';
+            link.style.color = 'inherit';
+            link.style.cursor = 'pointer';
+            
+            dom.footerContacts.appendChild(link);
+            
+            // Если сам контейнер footer-contacts был ссылкой в HTML, обновляем её тоже
+            if (dom.footerContacts.tagName === 'A') {
+                dom.footerContacts.href = contactsUrl;
+                dom.footerContacts.target = '_blank';
+                dom.footerContacts.textContent = contactsText;
+            }
+        } else {
+            // Если ссылки нет, просто текст
+            dom.footerContacts.textContent = contactsText;
         }
     }
 }
-
 /**
  * Загрузка контента и рендеринг слайдов
  */
