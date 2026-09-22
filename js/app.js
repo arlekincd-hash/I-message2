@@ -53,27 +53,46 @@ function init() {
 /**
  * Применение настроек из CONFIG
  */
+/**
+ * Применение настроек из CONFIG
+ */
 function applyConfig() {
     if (typeof CONFIG !== 'undefined') {
+        // Заголовок и автор
         dom.headerTitle.textContent = CONFIG.courseTitle || 'Курс';
         dom.headerAuthor.textContent = CONFIG.author || '';
         
-        // Исправленная логика для контактов: создаем ссылку, а не текст
+        // Контакты: берем ссылку и подпись
         const contactsUrl = CONFIG.creatorContacts;
-        const contactsLabel = CONFIG.creatorContactsLabel || contactsUrl;
+        const contactsLabel = CONFIG.creatorContactsLabel;
+        
+        // Элемент контактов (должен быть <a>)
+        const contactEl = dom.footerContacts;
         
         if (contactsUrl) {
-            // Очищаем контейнер
-            dom.footerContacts.innerHTML = '';
-            dom.footerContacts.href = contactsUrl;
-            dom.footerContacts.target = '_blank';
-            dom.footerContacts.rel = 'noopener noreferrer';
-            dom.footerContacts.textContent = contactsLabel || contactsUrl;
-            dom.footerContacts.style.textDecoration = 'none';
-            dom.footerContacts.style.color = 'inherit';
+            // Устанавливаем ссылку
+            contactEl.href = contactsUrl;
+            contactEl.target = '_blank';
+            contactEl.rel = 'noopener noreferrer';
+            
+            // Устанавливаем текст: если есть подпись - её, иначе саму ссылку
+            contactEl.textContent = contactsLabel || contactsUrl;
+            
+            // Стили для ссылки (чтобы выглядела как текст, но была кликабельной)
+            contactEl.style.textDecoration = 'none';
+            contactEl.style.color = 'inherit';
+            contactEl.style.cursor = 'pointer';
+            contactEl.style.opacity = '0.8';
+            contactEl.style.transition = 'opacity 0.2s';
+            
+            // Эффект при наведении
+            contactEl.onmouseover = () => contactEl.style.opacity = '1';
+            contactEl.onmouseout = () => contactEl.style.opacity = '0.8';
         } else {
-            dom.footerContacts.textContent = contactsLabel || '';
-            dom.footerContacts.removeAttribute('href');
+            // Если ссылки нет, просто текст
+            contactEl.removeAttribute('href');
+            contactEl.textContent = contactsLabel || '';
+            contactEl.style.cursor = 'default';
         }
     }
 }
