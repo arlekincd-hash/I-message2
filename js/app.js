@@ -641,4 +641,22 @@ function initQuiz(slideEl, slideData, index) {
 }
 
 // Запуск приложения после загрузки DOM
-window.addEventListener('load', init);
+// Ждем полной загрузки страницы И шрифтов
+async function startApp() {
+    // Если браузер поддерживает Font Loading API, ждем шрифты
+    if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+    }
+    // Небольшая задержка для гарантии отрисовки картинок
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            init();
+        });
+    });
+}
+
+if (document.readyState === 'complete') {
+    startApp();
+} else {
+    window.addEventListener('load', startApp);
+}
