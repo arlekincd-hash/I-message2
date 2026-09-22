@@ -1,6 +1,9 @@
 /*
  * js/reveal.js — механика появления блоков внутри слайда (раздел 6 ТЗ)
  * Можно смотреть, но НЕ ТРОГАТЬ — это часть движка
+ *
+ * ИЗМЕНЕНИЕ: поддержка поля icon в блоках content.js
+ * (иконка Lucide цветом из theme.css, через CSS-маску).
  */
 
 // Константы для настройки механики появления (можно менять здесь)
@@ -90,7 +93,19 @@ class RevealEngine {
                 blockEl.style.background = 'rgba(232, 237, 242, 0.92)';
             }
             
+            // Сначала текст: textContent затирает всё содержимое карточки,
+            // поэтому иконку добавляем строго ПОСЛЕ этой строки.
             blockEl.textContent = block.text;
+
+            if (block.icon) {
+                const icon = document.createElement('span');
+                icon.className = 'card-icon';
+                icon.style.setProperty('--icon',
+                    'url("https://unpkg.com/lucide-static@latest/icons/' + block.icon + '.svg")');
+                if (block.tone) icon.dataset.tone = block.tone;
+                blockEl.prepend(icon);
+            }
+
             overlayContainer.appendChild(blockEl);
             this.blockElements.push(blockEl);
         });
