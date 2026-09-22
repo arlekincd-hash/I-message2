@@ -1,75 +1,293 @@
 /*
- * css/cards.css — стили текстовых плашек и типов слайдов
- * Версия 2.0: Исправлены отступы, ширина и дизайн
- */
+ * ==================================================================
+ *  css/cards.css — движок: карточки-плашки, инфографика, тест, видео
+ *  Версия 3.0
+ *
+ *  ЭТОТ ФАЙЛ НЕ ПРАВИТ АВТОР КУРСА.
+ *  Все цвета берутся из config/theme.css. Хочешь другой вид карточек —
+ *  меняй переменные в theme.css, а этот файл не трогай.
+ *
+ *  Что нового против 2.0:
+ *   - ширина карточки = 85% ширины слайда (ТЗ), задаётся одной строкой ниже;
+ *   - чередование тонов теперь через переменные темы (а не «зашитые» rgba);
+ *   - читаемость текста на любом фото (усиленное размытие + мягкий щит);
+ *   - новая система инфографики: иконка задаётся в контенте, CSS не правится.
+ * ================================================================== */
 
-/* ============================================
-   REVEAL BLOCKS (ПЛАШКИ С ПОЯВЛЕНИЕМ)
-   ============================================ */
 
+/* ==================================================================
+   0. ЛОКАЛЬНЫЕ НАСТРОЙКИ КАРТОЧЕК
+      Если захочешь управлять ими из theme.css — просто скопируй эти
+      строки в блок :root файла theme.css и удали отсюда.
+   ================================================================== */
+.reveal-stack,
 .reveal-block {
-    /* Растягиваем на всю ширину контейнера слайда */
-    width: 90%; 
-    box-sizing: border-box;
-    
-    /* Позиционирование и отступы */
-    margin-bottom: 20px; /* Отступ между карточками */
-    padding: 24px 32px;  /* Внутренние поля: сверху/снизу и слева/справа */
-    
-    /* Дизайн "Стекло" (Glassmorphism) */
-    background: rgba(255, 255, 255, 0.85); /* Полупрозрачный белый */
-    backdrop-filter: blur(20px);           /* Размытие фона под карточкой */
-    -webkit-backdrop-filter: blur(12px);   /* Для Safari */
-    
-    /* Границы и скругления */
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 
-        0 4px 24px rgba(0, 0, 0, 0.08),   /* Мягкая тень */
-        0 1px 3px rgba(0, 0, 0, 0.05);    /* Четкая тень у края */
-    
-    /* Типографика */
-    color: var(--color-ink, #172433);
-    font-size: 1.1rem;
-    line-height: 1.5;
-    
-    /* Анимация появления (управляется JS) */
-    opacity: 0;
-    transform: translateY(20px);
-    transition: 
-        opacity 0.4s ease-out, 
-        transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --cards-width: 85%;          /* ★ ширина карточки от ширины слайда */
+    --cards-gap: 16px;           /* расстояние между карточками */
+    --cards-padding: 22px 28px;  /* внутренние поля карточки */
+    --cards-radius: var(--radius-card, 16px);
+    --cards-blur: calc(var(--card-blur, 8px) * 1.8); /* размытие «стекла» под текстом */
+    --cards-accent-a: var(--color-accent, #2F6BFF);  /* акцент тона A */
+    --cards-accent-b: var(--color-accent-2, #55C9C2); /* акцент тона B */
 }
 
-/* Состояние "Видимо" (добавляется JS) */
+
+/* ==================================================================
+   1. СТЕК КАРТОЧЕК ВНУТРИ СЛАЙДА
+      Карточки лежат в общем контейнере .reveal-stack и «растут» снизу
+      вверх: так ничего не дёргается при появлении новых плашек и
+      ничего не выезжает за пределы слайда.
+      Варианты выравнивания — модификаторами класса (см. ниже).
+   ================================================================== */
+.reveal-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;      /* по умолчанию — прижаты книзу */
+    gap: var(--cards-gap);
+    width: 100%;
+    max-height: 100%;
+    padding: 0 0 4% 0;
+    overflow: hidden;               /* страховка: ничего не вылезает */
+}
+
+.reveal-stack--top    { justify-content: flex-start; padding: 4% 0 0 0; }
+.reveal-stack--center { justify-content: center; }
+.reveal-stack--bottom { justify-content: flex-end; }
+
+/* Клики по «пустому» месту слайда не должны блокироваться стеком */
+.reveal-stack { pointer-events: none; }
+.reveal-stack .reveal-block { pointer-events: auto; }
+
+
+/* ==================================================================
+   2. КАРТОЧКА
+   ================================================================== */
+.reveal-block {
+    /* --- текущий тон карточки (меняется правилами ниже) --- */
+    --card-bg: var(--color-card-bg, rgba(255, 255, 255, 0.85));
+    --card-accent: var(--cards-accent-a);
+
+    position: relative;
+    box-sizing: border-box;
+    width: var(--cards-width);          /* ★ 85% ширины слайда */
+    max-width: 100%;
+    flex: 0 0 auto;
+
+    padding: var(--cards-padding);
+    border-radius: var(--cards-radius);
+
+    /* --- полупрозрачность «стекло» --- */
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--cards-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--cards-blur)) saturate(160%);
+
+    border: 1px solid var(--color-card-border, rgba(255, 255, 255, 0.6));
+
+    /* блик сверху + две мягкие тени */
+    box-shadow:
+        var(--card-highlight, inset 0 1px 0 0 rgba(255, 255, 255, 0.8)),
+        var(--card-shadow-soft, 0 10px 30px -10px rgba(23, 36, 51, 0.15)),
+        var(--card-shadow-hard, 0 4px 12px -4px rgba(23, 36, 51, 0.10));
+
+    /* --- типографика: контраст к светлому фону, читаемость --- */
+    color: var(--color-ink, #172433);
+    font-family: var(--font-text, sans-serif);
+    font-size: var(--font-size-text, 1.15rem);
+    line-height: 1.55;
+    text-wrap: pretty;                  /* аккуратные переносы в заголовках/абзацах */
+    hyphens: auto;                      /* работает, если в index.html есть lang="ru" */
+
+    /* --- вертикальный акцентный штрих слева --- */
+    /* появление управляется JS классом .is-visible */
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity 0.4s ease-out,
+        transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.3s ease;
+    will-change: opacity, transform;
+}
+
+/* Акцентный штрих слева: «плавающий», не прилипает к скруглению */
+.reveal-block::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14%;
+    bottom: 14%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--card-accent);
+    opacity: 0.9;
+}
+
+/* Состояние «видимо» — добавляет JS */
 .reveal-block.is-visible {
     opacity: 1;
     transform: translateY(0);
 }
 
-/* Чередование цветов для красоты (четные/нечетные) */
+/* --- ЧЕРЕДОВАНИЕ ЦВЕТОВ (по позиции карточки в стеке) --- */
 .reveal-block:nth-child(odd) {
-    background: rgba(255, 255, 255, 0.88);
-    border-left: 4px solid var(--color-accent, #2F6BFF); /* Синий акцент слева */
+    --card-bg: var(--color-card-bg, rgba(255, 255, 255, 0.85));
+    --card-accent: var(--cards-accent-a);
 }
 
 .reveal-block:nth-child(even) {
-    background: rgba(240, 245, 255, 0.85); /* Легкий голубой оттенок */
-    border-left: 4px solid var(--color-accent-2, #55C9C2); /* Мятный акцент слева */
+    --card-bg: var(--color-card-alt, rgba(230, 240, 255, 0.85));
+    --card-accent: var(--cards-accent-b);
 }
 
-/* Fallback для браузеров без backdrop-filter (старые версии) */
-@supports not (backdrop-filter: blur(8px)) {
+/* Если нужен тёплый/холодный вариант вместо чередования —
+   автор просто пишет в контенте  tone: "warm"  /  "cool"  /  "white"  */
+.reveal-block[data-tone="white"] { --card-bg: var(--color-card-bg, rgba(255, 255, 255, 0.85)); --card-accent: var(--color-accent, #2F6BFF); }
+.reveal-block[data-tone="cool"]  { --card-bg: var(--color-card-cool, rgba(240, 248, 255, 0.88)); --card-accent: var(--color-accent, #2F6BFF); }
+.reveal-block[data-tone="warm"]  { --card-bg: var(--color-card-warm, rgba(255, 250, 240, 0.88)); --card-accent: var(--color-error, #FF9D86); }
+.reveal-block[data-tone="mint"]  { --card-bg: rgba(235, 250, 249, 0.86); --card-accent: var(--color-accent-2, #55C9C2); }
+
+/* --- Ширина: варианты, если 85% не подходит конкретной карточке --- */
+.reveal-block--wide   { --cards-width: 100%; }
+.reveal-block--narrow { --cards-width: 60%; }
+
+/* --- Положение карточки: слева / справа / по центру --- */
+.reveal-block { margin-inline: auto; }          /* по умолчанию — центр */
+.reveal-block.is-left  { margin-inline: 0 auto; }  /* прижата влево */
+.reveal-block.is-right { margin-inline: auto 0; }  /* прижата вправо */
+
+
+/* ==================================================================
+   3. ТЕКСТ ВНУТРИ КАРТОЧКИ
+   ================================================================== */
+.reveal-block__title {
+    margin: 0 0 6px 0;
+    font-family: var(--font-text, sans-serif);
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--card-accent);
+    opacity: 0.95;
+}
+
+.reveal-block__text {
+    margin: 0;
+    font-size: 1em;
+}
+
+.reveal-block__text + .reveal-block__text { margin-top: 0.6em; }
+
+/* Номер шага — необязательная альтернатива иконке:  step: 1 */
+.reveal-block__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9em;
+    height: 1.9em;
+    padding: 0 0.4em;
+    border-radius: 999px;
+    background: var(--card-accent);
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+/* ==================================================================
+   4. ИНФОГРАФИКА (ИКОНКИ)
+      Иконка задаётся в контенте:  icon: "lightbulb"
+      Тон и стиль — необязательно:  tone: "mint",  style: "soft"
+      CSS править НЕ НУЖНО — всё подхватывается автоматически.
+   ================================================================== */
+.reveal-block__icon {
+    --tile-size: 44px;
+    --tile-color: var(--card-accent);
+
+    flex: 0 0 auto;
+    width: var(--tile-size);
+    height: var(--tile-size);
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    color: #fff;
+    background: var(--tile-color);
+    box-shadow: 0 6px 16px -6px rgba(23, 36, 51, 0.35);
+}
+
+.reveal-block__icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.75;
+}
+
+/* Размеры плитки */
+.reveal-block__icon[data-size="lg"] { --tile-size: 56px; }
+.reveal-block__icon[data-size="lg"] svg { width: 28px; height: 28px; }
+.reveal-block__icon[data-size="sm"] { --tile-size: 36px; border-radius: 11px; }
+.reveal-block__icon[data-size="sm"] svg { width: 18px; height: 18px; }
+
+/* Тона плитки */
+.reveal-block__icon[data-tone="accent"] { --tile-color: var(--color-accent, #2F6BFF); }
+.reveal-block__icon[data-tone="mint"]   { --tile-color: var(--color-accent-2, #55C9C2); }
+.reveal-block__icon[data-tone="coral"]  { --tile-color: var(--color-error, #FF9D86); }
+.reveal-block__icon[data-tone="ink"]    { --tile-color: var(--color-ink, #172433); }
+
+/* Стиль «мягкий»: пастельная плитка, цветная иконка */
+.reveal-block__icon[data-style="soft"] {
+    color: var(--tile-color);
+    background: color-mix(in srgb, var(--tile-color) 16%, transparent);
+    box-shadow: none;
+    border: 1px solid color-mix(in srgb, var(--tile-color) 28%, transparent);
+}
+
+/* Стиль «контур»: без заливки */
+.reveal-block__icon[data-style="outline"] {
+    color: var(--tile-color);
+    background: transparent;
+    box-shadow: none;
+    border: 1.5px solid color-mix(in srgb, var(--tile-color) 55%, transparent);
+}
+
+/* Фолбэк, если браузер не знает color-mix (старые сборки Chromium) */
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .reveal-block__icon[data-style="soft"]    { background: rgba(255, 255, 255, 0.85); color: var(--tile-color); }
+    .reveal-block__icon[data-style="outline"] { background: transparent; }
+}
+
+/* Карточка с иконкой: иконка слева, текст справа.
+   Работает и когда текст обёрнут в .reveal-block__content, и когда нет. */
+.reveal-block:has(.reveal-block__icon) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
+    align-items: center;
+}
+
+
+/* ==================================================================
+   5. ФОЛБЭКИ И ДОСТУПНОСТЬ
+   ================================================================== */
+
+/* Браузер без backdrop-filter: делаем фон почти плотным, чтобы текст
+   оставался читаемым поверх любой фотографии */
+@supports not (backdrop-filter: blur(4px)) {
     .reveal-block {
-        background: rgba(255, 255, 255, 0.98) !important;
+        background: color-mix(in srgb, var(--card-bg) 92%, #fff);
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
     }
 }
 
-/* ============================================
-   QUIZ OPTION LETTERS (БУКВЫ ВАРИАНТОВ ОТВЕТА)
-   ============================================ */
+/* Пользователь просил меньше анимации — уважаем это */
+@media (prefers-reduced-motion: reduce) {
+    .reveal-block { transition: opacity 0.2s linear; transform: none; }
+}
+
+
+/* ==================================================================
+   6. ТЕСТ (QUIZ)
+   ================================================================== */
 .quiz-option-letter {
     font-weight: 700;
     margin-right: 10px;
@@ -78,50 +296,32 @@
     display: inline-block;
 }
 
-/* ============================================
-   VIDEO PLAY OVERLAY ICONS
-   ============================================ */
-.video-play-overlay svg {
-    width: 40px;
-    height: 40px;
-}
+/* ==================================================================
+   7. ВИДЕО: ИКОНКИ ПОВЕРХ ПЛЕЕРА
+   ================================================================== */
+.video-play-overlay svg { width: 40px; height: 40px; }
+.video-controls svg     { width: 20px; height: 20px; }
 
-.video-controls svg {
-    width: 20px;
-    height: 20px;
-}
 
-/* ============================================
-   RESPONSIVE ADJUSTMENTS (АДАПТИВ)
-   ============================================ */
-@media (max-height: 700px) {
+/* ==================================================================
+   8. АДАПТАЦИЯ ПОД НЕВЫСОКИЕ ЭКРАНЫ (ноутбуки 1366×768 и подобные)
+      Планшетов и телефонов в этой версии нет — только ПК.
+   ================================================================== */
+@media (max-height: 760px) {
     .reveal-block {
-        padding: 16px 20px;
-        margin-bottom: 12px;
+        --cards-padding: 16px 22px;
         font-size: 1rem;
     }
-    
-    .quiz-container {
-        padding: 30px 40px;
-    }
-    
-    .quiz-question {
-        font-size: 1.5rem;
-        margin-bottom: 25px;
-    }
-    
-    .quiz-option {
-        padding: 15px 20px;
-        font-size: 1rem;
-    }
+    .reveal-stack { --cards-gap: 12px; }
+    .reveal-block__icon { --tile-size: 38px; }
+    .reveal-block__icon svg { width: 19px; height: 19px; }
+
+    .quiz-container { padding: 30px 40px; }
+    .quiz-question  { font-size: 1.5rem; margin-bottom: 25px; }
+    .quiz-option    { padding: 15px 20px; font-size: 1rem; }
 }
 
-@media (max-width: 1200px) {
-    .quiz-container {
-        padding: 40px 50px;
-    }
-    
-    .reveal-block {
-        padding: 20px 24px;
-    }
+@media (max-width: 1280px) {
+    .reveal-block { --cards-padding: 18px 24px; }
+    .quiz-container { padding: 40px 50px; }
 }
