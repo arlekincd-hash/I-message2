@@ -325,3 +325,20 @@
     .reveal-block { --cards-padding: 18px 24px; }
     .quiz-container { padding: 40px 50px; }
 }
+.card-icon {
+    display: block;
+    float: left;
+    width: 28px;
+    height: 28px;
+    margin: 4px 14px 0 0;
+    background: var(--color-accent);          /* синий из theme.css */
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+.reveal-block:nth-child(even) .card-icon {
+    background: var(--color-accent-2);        /* мята у чётных карточек */
+}
+
+.card-icon[data-tone="coral"] { background: var(--color-error); }
+.card-icon[data-tone="mint"]  { background: var(--color-accent-2); }
