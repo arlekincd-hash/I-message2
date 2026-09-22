@@ -1,3 +1,47 @@
+```gitignore
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+.env.*
+
+# Build directories
+dist/
+build/
+target/
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
 ```
-# Source and config files only - no build artifacts, dependencies, or temp files detected
+
+Wait, I need to reconsider. The modified files are only `index.html` and `js/app.js`, which are source files. Let me check the rules again.
+
+According to rule #6: "If the change list contains ONLY source or config files (e.g., `.py`, `.js`, `.java`, `.go`, `.cpp`, `.h`, `.md`, `.txt`, `.json`, `.yml`, `.yaml`, `.toml`, `.cfg`, `.ini`, etc.) and NO build artifacts, dependencies, or temp files — output an EMPTY .gitignore"
+
+Since the changes are only to `index.html` (html) and `js/app.js` (javascript), which are source files, and there are no build artifacts, dependencies, or temp files in the change list, the output should be empty.
+
+```gitignore
+
 ```
