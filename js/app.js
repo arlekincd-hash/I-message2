@@ -641,10 +641,4 @@ function initQuiz(slideEl, slideData, index) {
 }
 
 // Запуск приложения после загрузки DOM
-// Ждем полной загрузки страницы (HTML + CSS + Картинки + Шрифты)
-window.addEventListener('load', () => {
-    // Небольшая задержка, чтобы браузер успел отрисовать стили
-    requestAnimationFrame(() => {
-        init();
-    });
-});
+window.addEventListener('load', init);
