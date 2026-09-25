@@ -32,9 +32,9 @@
  *     type: 'text-overlay',
  *     media: 'data/slide_01.jpg',
  *     blocks: [
- *         { text: 'Текст первой плашки', order: 1 },
- *         { text: 'Текст второй плашки', order: 2 },
- *         { text: 'Текст третьей плашки', order: 3 }
+ *         { icon: 'check', 'check'text: 'Текст первой плашки', order: 1 },
+ *         { icon: 'check', text: 'Текст второй плашки', order: 2 },
+ *         { icon: 'check', text: 'Текст третьей плашки', order: 3 }
  *     ]
  * },
  * 
